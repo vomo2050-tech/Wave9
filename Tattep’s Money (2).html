@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tattep’s Money</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5f4ef;--surface:#fff;--ink:#14181f;--mute:#6a7280;--line:#e3e1d8;--inc:#0e9f6e;--exp:#e5484d;--sav:#b7791f;--gold:#f2b134;--accent:#0f6b55;--onaccent:#fff;--shadow:0 1px 2px rgba(20,24,31,.05),0 6px 18px -8px rgba(20,24,31,.12);--hero:linear-gradient(135deg,#0d3b2e,#12775e 60%,#1fa383);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1110;--surface:#151c1a;--ink:#eef3f1;--mute:#93a19b;--line:#26302d;--inc:#34d399;--exp:#ff7a7f;--sav:#f2b134;--accent:#1fa383;--onaccent:#06130f;--shadow:0 1px 2px rgba(0,0,0,.3)}}
+:root[data-theme="dark"]{--bg:#0c1110;--surface:#151c1a;--ink:#eef3f1;--mute:#93a19b;--line:#26302d;--inc:#34d399;--exp:#ff7a7f;--sav:#f2b134;--accent:#1fa383;--onaccent:#06130f;--shadow:0 1px 2px rgba(0,0,0,.3)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:transform .12s,background .2s,border-color .2s,color .2s}
+button:active:not(:disabled){transform:scale(.95)}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.rip{position:absolute;border-radius:50%;background:currentColor;opacity:.22;transform:scale(0);animation:rip .6s ease-out forwards;pointer-events:none}
+.app{max-width:640px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:0 14px}
+.top{padding:12px 0 8px}
+.hi{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.logo{width:34px;height:34px;border-radius:11px;background:var(--hero);color:#fff;display:grid;place-items:center;font-weight:700}
+.hi .nm{flex:1;line-height:1.2}.hi .nm b{display:block;font-size:1rem}.hi .nm small{color:var(--mute);font-size:.75rem}
+.lock{display:flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;color:var(--inc);background:color-mix(in srgb,var(--inc) 12%,transparent);padding:4px 9px;border-radius:99px}
+.sum{background:var(--hero);color:#fff;border-radius:22px;padding:16px 16px 14px;box-shadow:0 12px 28px -12px rgba(15,107,85,.6)}
+.sum small{display:block;opacity:.75;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em}
+.sum b{font-variant-numeric:tabular-nums}
+.sum .bal b{font-size:1.9rem;letter-spacing:-.025em;line-height:1.2}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.18)}
+.trio b{font-size:.95rem}.trio .i b{color:#8ff0c8}.trio .e b{color:#ffb3a8}.trio .s b{color:#ffd98a}
+.tabs{display:flex;gap:5px;margin-top:10px}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid var(--line);background:var(--surface);color:var(--mute);border-radius:12px;padding:7px 2px 6px;font:inherit;font-size:.68rem;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+.tabs button[aria-pressed="true"]{color:var(--onaccent);background:var(--accent);border-color:var(--accent)}
+.ic{width:18px;height:18px}
+#chat,#hist,#ov,#calc,#inv{flex:1;overflow-y:auto;padding:8px 0 12px;min-height:0}
+#hist,#ov,#calc,#inv{display:none}
+.in{animation:pane .35s ease-out}
+.msg{max-width:88%;padding:10px 13px;border-radius:16px;margin:8px 0;white-space:pre-wrap;word-wrap:break-word;animation:pop .25s ease-out}
+.bot{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px;box-shadow:var(--shadow)}
+.me{background:var(--accent);color:var(--onaccent);margin-left:auto;border-bottom-right-radius:4px}
+.chips{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.chip{display:flex;justify-content:space-between;gap:10px;background:var(--bg);border-radius:10px;padding:7px 10px;font-size:.9rem;animation:pop .3s ease-out}
+.chip i{font-style:normal;color:var(--mute)}
+.amt{font-weight:700;font-variant-numeric:tabular-nums}
+.t-inc{color:var(--inc)}.t-exp{color:var(--exp)}.t-sav{color:var(--sav)}
+.hint{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.hint button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.hint button:hover{border-color:var(--accent)}
+form{display:flex;gap:8px;padding:8px 0 12px}
+input[type=text]{flex:1;min-width:0;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+form button,.go{border:0;border-radius:14px;padding:0 18px;background:var(--accent);color:var(--onaccent);font:inherit;font-weight:700;cursor:pointer}
+.go.big{padding:11px 20px;margin:4px 8px 4px 0}
+.go.sm{padding:9px 14px;font-size:.85rem;margin:6px 8px 0 0}
+.go.alt{background:var(--gold);color:#2b2100}
+.go.out{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);transition:all .22s}
+.row:first-child{border-top:0}
+.row.gone{opacity:0;transform:translateX(30px)}
+.row .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.row .mid{flex:1;min-width:0}.row .mid b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .mid span{font-size:.8rem;color:var(--mute)}
+.row .del{border:0;background:none;color:var(--mute);font-size:1.2rem;cursor:pointer;padding:4px 8px}
+.empty{color:var(--mute);text-align:center;margin-top:24px}
+#mon{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:4px 0 10px}
+.donut{display:flex;justify-content:center;margin:4px 0 12px}
+.donut svg{animation:spin .9s ease-out}
+.donut text{fill:var(--ink);font-family:inherit}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card p{margin:0 0 8px}.card p:last-child{margin:0}
+.ttl{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--mute);margin:18px 0 8px}
+.fine{color:var(--mute);font-size:.75rem;margin:8px 0 0}
+.rule{margin:10px 0}
+.rule .h{display:flex;justify-content:space-between;font-size:.88rem}
+.rule .h small{color:var(--mute)}
+.bar{position:relative;height:9px;background:var(--line);border-radius:99px;margin-top:5px;overflow:visible}
+.bar div{height:100%;border-radius:99px;animation:grow .9s ease-out}
+.bar i{position:absolute;top:-3px;width:2px;height:15px;background:var(--ink);opacity:.55;border-radius:2px}
+.over{background:repeating-linear-gradient(45deg,var(--exp) 0 4px,var(--surface) 4px 6px)!important}
+.grp{margin-top:12px}
+.grp .gh{display:flex;align-items:center;gap:8px;font-weight:700;padding-bottom:4px;border-bottom:2px solid var(--line)}
+.grp .gh .dot{width:11px;height:11px;border-radius:4px;flex:none}
+.grp .gh span{flex:1}.grp .gh small{color:var(--mute);font-weight:500}
+.cat{padding:7px 0 7px 19px;border-bottom:1px solid var(--line);font-size:.92rem}
+.cat .h{display:flex;justify-content:space-between;gap:8px}
+.cat small{color:var(--mute)}
+.cat .bar{height:6px;margin-top:5px}
+.trend text{fill:var(--ink);font-family:inherit}
+.trend rect{transform-box:fill-box;transform-origin:bottom;animation:rise .8s ease-out}
+.key{display:flex;gap:14px;font-size:.8rem;color:var(--mute);margin-top:4px;flex-wrap:wrap}
+.key i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;box-shadow:var(--shadow)}
+.stat small{display:block;color:var(--mute);font-size:.7rem}
+.stat b{font-variant-numeric:tabular-nums;font-size:.95rem}
+.ctl{display:grid;grid-template-columns:78px 1fr auto;gap:10px;align-items:center;margin:8px 0;font-size:.88rem}
+.ctl output{font-weight:700;min-width:70px;text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.invsvg{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:var(--shadow)}
+.invsvg text{fill:var(--mute);font-family:inherit}
+#cq{width:100%;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;resize:vertical}
+.cout{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:12px;white-space:pre-wrap;word-wrap:break-word;animation:pop .3s ease-out}
+.cout:empty{display:none}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:12px;display:none;align-items:center;gap:12px;font-size:.88rem;box-shadow:0 10px 30px -8px rgba(0,0,0,.4);z-index:40;max-width:92vw}
+#toast.on{display:flex;animation:pop .25s ease-out}
+#toast button{background:none;border:0;color:var(--gold);font:inherit;font-weight:700;cursor:pointer;padding:2px 6px}
+.coin{position:fixed;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px rgba(255,255,255,.5);pointer-events:none;z-index:50;animation:coin .9s ease-out forwards}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}}
+@keyframes pane{from{opacity:0;transform:translateY(10px)}}
+@keyframes grow{from{width:0}}
+@keyframes rise{from{transform:scaleY(0)}}
+@keyframes spin{from{transform:rotate(-90deg) scale(.85);opacity:0}}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+@keyframes coin{0%{transform:translate(0,0)}40%{transform:translate(calc(var(--dx)*.6),var(--dy))}100%{transform:translate(var(--dx),70px);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="hi">
+      <div class="logo">T</div>
+      <div class="nm"><b>Tattep’s Money</b><small id="dt"></small></div>
+      <div class="lock"><svg class="ic" style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Private</div>
+    </div>
+    <div class="sum">
+      <div class="bal"><small id="lbl">Cash left this month</small><b id="bal">฿0</b></div>
+      <div class="trio">
+        <div class="i"><small>Income</small><b id="inc">฿0</b></div>
+        <div class="e"><small>Expenses</small><b id="exp">฿0</b></div>
+        <div class="s"><small>Saved</small><b id="sav">฿0</b></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button type="button" id="tChat" aria-pressed="true"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>Chat</button>
+      <button type="button" id="tOv" aria-pressed="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/></svg>Overview</button>
+      <button type="button" id="tInv" aria-pressed="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Invest</button>
+      <button type="button" id="tCalc" aria-pressed="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M12 12h2M8 16h2M12 16h2"/></svg>AI Calc</button>
+      <button type="button" id="tHist" aria-pressed="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14M5 12h14M5 18h14"/></svg>History</button>
+    </div>
+  </div>
+
+  <div id="chat" aria-live="polite"></div>
+
+  <div id="ov"><input type="month" id="mon" aria-label="Choose month"><div id="ovb"></div></div>
+
+  <div id="inv">
+    <div class="card" id="snap"></div>
+    <div class="invsvg"><svg id="isvg" viewBox="0 0 320 182" width="100%" role="img" aria-label="Animated investment growth chart"></svg></div>
+    <div class="key"><span><i style="background:var(--gold)"></i>You put in</span><span><i style="background:var(--inc)"></i>Growth</span></div>
+    <div class="stats">
+      <div class="stat"><small>Total value</small><b id="sT">฿0</b></div>
+      <div class="stat"><small>You put in</small><b id="sC">฿0</b></div>
+      <div class="stat"><small>Growth</small><b id="sG">฿0</b></div>
+    </div>
+    <div class="ctl"><label for="rP">Monthly</label><input type="range" id="rP" min="500" max="50000" step="500" value="5000"><output id="oP"></output></div>
+    <div class="ctl"><label for="rR">Return / yr</label><input type="range" id="rR" min="0" max="15" step="0.5" value="7"><output id="oR"></output></div>
+    <div class="ctl"><label for="rY">Years</label><input type="range" id="rY" min="1" max="40" step="1" value="20"><output id="oY"></output></div>
+    <button class="go big" id="play" type="button">Play animation</button>
+    <p class="fine">Illustration only. Real returns vary, can be negative, and are not guaranteed. This is not financial advice.</p>
+    <p class="ttl">Good to know</p>
+    <div class="card"><p><b>Rule of 72.</b> Divide 72 by the yearly return to estimate years to double. At <span id="r72r">7</span>%, about <b id="r72">10</b> years.</p><p><b>50 / 30 / 20.</b> Roughly 50% needs, 30% wants, 20% saving and investing.</p><p><b>Emergency fund first.</b> Keep 3 to 6 months of expenses in cash before taking investment risk.</p></div>
+  </div>
+
+  <div id="calc">
+    <p class="ttl" style="margin-top:4px">Ask anything that needs math</p>
+    <textarea id="cq" rows="3" placeholder="e.g. If I save 3,000 a month at 2% a year, how much will I have after 3 years?" aria-label="Calculation question"></textarea>
+    <div class="hint" id="chint">
+      <button type="button">Save 3000 a month at 2% a year for 3 years</button>
+      <button type="button">Split 1860 between 4 people plus 10% tip</button>
+      <button type="button">How much could I save if I cut my top category by 20%?</button>
+    </div>
+    <button class="go big" id="cgo" type="button">Calculate</button>
+    <div class="cout" id="cout" aria-live="polite"></div>
+  </div>
+
+  <div id="hist">
+    <div class="card">
+      <p><b>Private to you</b></p>
+      <p class="fine" style="margin-top:0">Your entries are saved in your own protected space. Other people who open this link get their own empty space and can’t see yours. A backup copy is also kept in this browser.</p>
+      <button class="go sm" id="xX" type="button">Export Excel (.xlsx)</button><button class="go sm out" id="xC" type="button">Export CSV</button>
+      <p class="fine">Exports are snapshot files you can open in Excel. They don’t sync live.</p>
+    </div>
+    <div id="hlist"></div>
+  </div>
+
+  <div class="hint" id="hint">
+    <button type="button">ข้าวเที่ยง 60 กาแฟ 55</button>
+    <button type="button">เงินเดือนเข้า 25000</button>
+    <button type="button">ออมเงินฉุกเฉิน 2000</button>
+    <button type="button">ค่าจิปาถะ 150</button>
+    <button type="button">เดือนนี้ใช้ไปเท่าไหร่</button>
+  </div>
+  <form id="f">
+    <input type="text" id="q" placeholder="พิมพ์เลย เช่น “แท็กซี่ 120 เมื่อวาน”" autocomplete="off" aria-label="Message">
+    <button id="send" type="submit">Send</button>
+  </form>
+</div>
+<div id="toast" role="status"><span id="tmsg"></span><button type="button" id="tact"></button></div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var fmt=function(n){return "฿"+Number(n).toLocaleString("en-US",{maximumFractionDigits:2})};
+  var NAME="ทัตเทพ",BK="tattep-money-backup-v1";
+  var LISTS={Needs:["Food","Transport","Housing","Utilities","Health","Education"],Wants:["Drinks","Shopping","Entertainment"],Misc:["Miscellaneous"],Savings:["Emergency fund","Investments","Savings goal"]};
+  var INC=["Salary","Side income","Bonus","Gift","Other income"];
+  var GCOL={Needs:"#19a7ce",Wants:"#f2b134",Misc:"#7c5cff",Savings:"#0e9f6e"},GNAME={Needs:"Needs",Wants:"Wants",Misc:"Miscellaneous",Savings:"Savings"},GORDER=["Needs","Wants","Misc","Savings"];
+  var ALIAS={"อาหาร":"Food","เครื่องดื่ม":"Drinks","เดินทาง":"Transport","ที่พัก":"Housing","ค่าน้ำค่าไฟ":"Utilities","ช้อปปิ้ง":"Shopping","สุขภาพ":"Health","บันเทิง":"Entertainment","การศึกษา":"Education","อื่นๆ":"Miscellaneous","other":"Miscellaneous","เงินเดือน":"Salary","งานเสริม":"Side income","โบนัส":"Bonus","ของขวัญ":"Gift"};
+  var LOOK={};
+  GORDER.forEach(function(g){LISTS[g].forEach(function(c){LOOK[c.toLowerCase()]=c})});INC.forEach(function(c){LOOK[c.toLowerCase()]=LOOK[c.toLowerCase()]||c});
+  function norm(c,type){
+    var s=String(c||"").trim(),k=s.toLowerCase();
+    if(type==="inc")return INC.indexOf(ALIAS[s]||s)>=0?(ALIAS[s]||s):(INC.map(function(x){return x.toLowerCase()}).indexOf(k)>=0?INC[INC.map(function(x){return x.toLowerCase()}).indexOf(k)]:"Other income");
+    var r=ALIAS[s]||ALIAS[k]||LOOK[k];
+    if(type==="sav")return LISTS.Savings.indexOf(r)>=0?r:"Savings goal";
+    return r&&LISTS.Savings.indexOf(r)<0?r:"Miscellaneous";
+  }
+  function grp(c){for(var i=0;i<GORDER.length;i++)if(LISTS[GORDER[i]].indexOf(c)>=0)return GORDER[i];return "Misc"}
+  function gOf(i){return i.type==="inc"?null:(i.type==="sav"?"Savings":grp(norm(i.category,"exp")))}
+
+  var sample=null,db=null,col=null,items=[],turns=[],busy=false,budgets={},viewMonth=today().slice(0,7),shown=0,gotSnap=false;
+  var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+  function addMsg(cls,html){var d=document.createElement("div");d.className="msg "+cls;d.innerHTML=html;$("chat").appendChild(d);$("chat").scrollTop=$("chat").scrollHeight;return d}
+  function sign(t){return t==="inc"?"+":t==="sav"?"→ ":"−"}
+  function sum(m){var r={inc:0,exp:0,sav:0};items.forEach(function(i){if(String(i.date).slice(0,7)===m)r[i.type==="inc"?"inc":i.type==="sav"?"sav":"exp"]+=i.amount});return r}
+  function mirror(){try{localStorage.setItem(BK,JSON.stringify({items:items,budgets:budgets}))}catch(e){}}
+  function readMirror(){try{return JSON.parse(localStorage.getItem(BK))}catch(e){return null}}
+
+  var tt=0;
+  function toast(msg,label,fn){
+    $("tmsg").textContent=msg;$("tact").style.display=label?"":"none";$("tact").textContent=label||"";
+    $("tact").onclick=function(){$("toast").classList.remove("on");if(fn)fn()};
+    $("toast").classList.add("on");clearTimeout(tt);tt=setTimeout(function(){$("toast").classList.remove("on")},label?7000:3500);
+  }
+  function burst(el,n){
+    if(reduce||!el)return;var r=el.getBoundingClientRect();
+    for(var k=0;k<n;k++)(function(){var c=document.createElement("i");c.className="coin";c.style.left=(r.left+r.width/2)+"px";c.style.top=(r.top+r.height/2)+"px";c.style.setProperty("--dx",(Math.random()*180-90)+"px");c.style.setProperty("--dy",(-50-Math.random()*90)+"px");document.body.appendChild(c);setTimeout(function(){c.remove()},950)})();
+  }
+  document.addEventListener("pointerdown",function(e){
+    var b=e.target.closest&&e.target.closest("button");if(!b||b.disabled||reduce)return;
+    var r=b.getBoundingClientRect(),s=Math.max(r.width,r.height)*2,sp=document.createElement("span");
+    sp.className="rip";sp.style.cssText="width:"+s+"px;height:"+s+"px;left:"+(e.clientX-r.left-s/2)+"px;top:"+(e.clientY-r.top-s/2)+"px";
+    b.appendChild(sp);setTimeout(function(){sp.remove()},650);
+  });
+
+  function tweenBal(to){
+    var from=shown,t0=performance.now();shown=to;
+    if(reduce){$("bal").textContent=fmt(to);return}
+    (function st(n){var p=Math.min(1,(n-t0)/600),e=1-Math.pow(1-p,3);$("bal").textContent=fmt(from+(to-from)*e);if(p<1)requestAnimationFrame(st)})(t0);
+  }
+  function totals(){
+    var s=sum(viewMonth);
+    tweenBal(s.inc-s.exp-s.sav);$("inc").textContent=fmt(s.inc);$("exp").textContent=fmt(s.exp);$("sav").textContent=fmt(s.sav);
+    $("lbl").textContent=viewMonth===today().slice(0,7)?"Cash left this month":"Cash left "+viewMonth;
+    renderOv();renderSnap();
+  }
+  function renderHist(){
+    var s=items.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date))||(b.ts||0)-(a.ts||0)});
+    $("hlist").innerHTML=s.length?s.map(function(i){
+      var d=new Date(i.date+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"2-digit"});
+      var c=norm(i.category,i.type==="inc"?"inc":i.type==="sav"?"sav":"exp"),g=gOf(i);
+      return '<div class="row"><span class="dot" style="background:'+(g?GCOL[g]:"var(--inc)")+'"></span><div class="mid"><b>'+esc(i.note||c)+'</b><span>'+d+' · '+esc(c)+'</span></div><span class="amt t-'+(i.type||"exp")+'">'+sign(i.type)+fmt(i.amount)+'</span><button class="del" data-id="'+esc(i.id)+'" aria-label="Delete entry">×</button></div>';
+    }).join(""):'<p class="empty">Nothing yet. Just type in the chat.</p>';
+    totals();
+  }
+
+  function renderOv(){
+    var m=viewMonth,s=sum(m),byC={},byG={Needs:0,Wants:0,Misc:0,Savings:0};
+    items.forEach(function(i){if(String(i.date).slice(0,7)!==m||i.type==="inc")return;var c=norm(i.category,i.type==="sav"?"sav":"exp"),g=gOf(i);byC[c]=(byC[c]||0)+i.amount;byG[g]+=i.amount});
+    var out=s.exp+s.sav,bm={};
+    Object.keys(budgets).forEach(function(k){bm[norm(k,"exp")]=budgets[k]});
+    var h='';
+    if(s.inc>0){
+      var rows=[["Needs",byG.Needs,50,GCOL.Needs],["Wants & misc",byG.Wants+byG.Misc,30,GCOL.Wants],["Savings",byG.Savings,20,GCOL.Savings]];
+      h+='<p class="ttl" style="margin-top:4px">50 / 30 / 20 check</p><div class="card">'+rows.map(function(r,n){
+        var p=Math.round(r[1]/s.inc*100),bad=n<2?p>r[2]:false;
+        return '<div class="rule"><div class="h"><span>'+r[0]+'</span><small>'+p+'% of income · target '+(n<2?"up to ":"at least ")+r[2]+'%</small></div><div class="bar"><div class="'+(bad?'over':'')+'" style="width:'+Math.min(100,p)+'%;background:'+r[3]+'"></div><i style="left:'+r[2]+'%"></i></div></div>';
+      }).join("");
+      var need=Math.max(0,Math.round(s.inc*0.2-byG.Savings));
+      h+='<p class="fine">'+(need>0?'Saving '+fmt(need)+' more this month would reach the 20% target.':'You’re at or above the 20% savings target. Nice work.')+'</p></div>';
+    }
+    var R=52,C=2*Math.PI*R,off=0,arcs='<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="var(--line)" stroke-width="22"/>';
+    GORDER.forEach(function(g){var v=byG[g];if(!v)return;var len=v/out*C;arcs+='<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="'+GCOL[g]+'" stroke-width="22" stroke-dasharray="'+Math.max(len-1,0.1)+' '+(C-len+1)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 70 70)"/>';off+=len});
+    h+='<p class="ttl">Where your money went</p><div class="donut"><svg viewBox="0 0 140 140" width="200" height="200" role="img" aria-label="Money out by group">'+arcs+'<text x="70" y="66" text-anchor="middle" font-size="9" opacity=".6">Money out</text><text x="70" y="82" text-anchor="middle" font-size="14" font-weight="700">'+fmt(out)+'</text></svg></div>';
+    var lg=GORDER.map(function(g){
+      var cats=LISTS[g].filter(function(c){return byC[c]||(g!=="Savings"&&bm[c])});
+      Object.keys(byC).forEach(function(c){if(grp(c)===g&&cats.indexOf(c)<0)cats.push(c)});
+      if(!cats.length)return '';
+      cats.sort(function(a,b){return (byC[b]||0)-(byC[a]||0)});
+      return '<div class="grp"><div class="gh"><span class="dot" style="background:'+GCOL[g]+'"></span><span>'+GNAME[g]+'</span><b>'+fmt(byG[g])+'</b><small>'+(out?Math.round(byG[g]/out*100):0)+'%</small></div>'+cats.map(function(c){
+        var v=byC[c]||0,b=bm[c];
+        return '<div class="cat"><div class="h"><span>'+esc(c)+'</span><span>'+fmt(v)+'</span></div>'+(b?'<div class="bar"><div class="'+(v>b?'over':'')+'" style="width:'+Math.min(100,v/b*100)+'%;background:var(--inc)"></div></div><small>Budget '+fmt(b)+' · '+(v>b?'over by '+fmt(v-b):fmt(b-v)+' left')+'</small>':'')+'</div>';
+      }).join("")+'</div>';
+    }).join("");
+    $("ovb").innerHTML=h+(lg||'<p class="empty">No spending logged this month.</p>')+trend();
+  }
+  function trend(){
+    var p=viewMonth.split("-"),y=+p[0],mo=+p[1],ms=[];
+    for(var n=5;n>=0;n--){var d=new Date(y,mo-1-n,1);ms.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"))}
+    var data=ms.map(function(m){var s=sum(m);return {m:m,a:s.inc,b:s.exp,c:s.sav}});
+    var mx=Math.max.apply(null,data.map(function(d){return Math.max(d.a,d.b,d.c)}).concat([1]));
+    var s='';
+    data.forEach(function(d,k){
+      var x=8+k*52;
+      [[d.a,"var(--inc)"],[d.b,"var(--exp)"],[d.c,"var(--gold)"]].forEach(function(z,j){var hh=z[0]/mx*100;s+='<rect x="'+(x+j*15)+'" y="'+(110-hh)+'" width="13" height="'+hh+'" rx="3" fill="'+z[1]+'"/>'});
+      s+='<text x="'+(x+21)+'" y="126" text-anchor="middle" font-size="9" opacity=".65">'+new Date(d.m+"-01T00:00:00").toLocaleDateString("en-GB",{month:"short"})+'</text>';
+    });
+    return '<p class="ttl">Last 6 months</p><div class="card"><div class="trend"><svg viewBox="0 0 320 135" width="100%" role="img" aria-label="Income, expenses and savings, last 6 months">'+s+'</svg></div><div class="key"><span><i style="background:var(--inc)"></i>Income</span><span><i style="background:var(--exp)"></i>Expenses</span><span><i style="background:var(--gold)"></i>Saved</span></div></div>';
+  }
+
+  /* ---------- Invest animation ---------- */
+  var raf=0;
+  function invVals(){return {P:+$("rP").value,r:+$("rR").value,y:+$("rY").value}}
+  function drawInv(t){
+    var v=invVals(),N=v.y*12,rr=v.r/1200,m=Math.round(t*N);
+    function val(k){return rr>0?v.P*(Math.pow(1+rr,k)-1)/rr:v.P*k}
+    var fin=Math.max(val(N),1);
+    var X=function(k){return (8+k/N*304).toFixed(1)},Y=function(a){return (160-a/fin*150).toFixed(1)};
+    var top="M8,160",con="M8,160";
+    for(var k=0;k<=m;k++){top+=" L"+X(k)+","+Y(val(k));con+=" L"+X(k)+","+Y(v.P*k)}
+    top+=" L"+X(m)+",160Z";con+=" L"+X(m)+",160Z";
+    var g='';
+    [160,110,60,10].forEach(function(y){g+='<line x1="8" x2="312" y1="'+y+'" y2="'+y+'" stroke="var(--line)" stroke-width="1"/>'});
+    g+='<text x="8" y="177" font-size="8">Year 0</text><text x="160" y="177" font-size="8" text-anchor="middle">Year '+Math.round(v.y/2)+'</text><text x="312" y="177" font-size="8" text-anchor="end">Year '+v.y+'</text>';
+    g+='<path d="'+top+'" fill="var(--inc)" fill-opacity=".85"/><path d="'+con+'" fill="var(--gold)"/>';
+    g+='<circle cx="'+X(m)+'" cy="'+Y(val(m))+'" r="4" fill="var(--inc)" stroke="var(--surface)" stroke-width="2"/>';
+    if(t>=1)g+='<circle cx="'+X(m)+'" cy="'+Y(val(m))+'" r="4" fill="none" stroke="var(--inc)"><animate attributeName="r" values="4;11;4" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0;.9" dur="1.6s" repeatCount="indefinite"/></circle>';
+    $("isvg").innerHTML=g;
+    var tot=val(m),put=v.P*m;
+    $("sT").textContent=fmt(Math.round(tot));$("sC").textContent=fmt(Math.round(put));$("sG").textContent=fmt(Math.round(tot-put));
+  }
+  function labels(){
+    var v=invVals();
+    $("oP").textContent=fmt(v.P);$("oR").textContent=v.r+"%";$("oY").textContent=v.y+" yrs";
+    $("r72r").textContent=v.r;$("r72").textContent=v.r>0?Math.round(72/v.r*10)/10:"∞";
+  }
+  function playInv(){
+    cancelAnimationFrame(raf);
+    if(reduce){drawInv(1);return}
+    var t0=performance.now();
+    (function st(n){var p=Math.min(1,(n-t0)/3200),e=1-Math.pow(1-p,3);drawInv(e);if(p<1)raf=requestAnimationFrame(st)})(t0);
+  }
+  function renderSnap(){
+    var s=sum(viewMonth),h='<p><b>Tattep’s snapshot</b> · '+viewMonth+'</p>';
+    if(s.inc>0){
+      var sug=Math.min(50000,Math.max(500,Math.round(s.inc*0.2/500)*500));
+      h+='<p>You moved <b>'+Math.round(s.sav/s.inc*100)+'%</b> of your income into savings. A common starting point is investing about 20% of income, which would be <b>'+fmt(sug)+'</b> a month.</p><button class="go big alt" type="button" data-sug="'+sug+'">Use '+fmt(sug)+' / month</button>';
+    }else h+='<p>Log some income in the chat and I’ll suggest a monthly amount to invest. You can still play with the sliders below.</p>';
+    $("snap").innerHTML=h;
+  }
+
+  /* ---------- Data ---------- */
+  async function saveTx(t){
+    var ty=t.type==="inc"?"inc":t.type==="sav"?"sav":"exp";
+    var rec={type:ty,amount:Number(t.amount),category:norm(t.category,ty),note:String(t.note||""),date:/^\d{4}-\d{2}-\d{2}$/.test(t.date)?t.date:today(),ts:Date.now()};
+    if(!(rec.amount>0))return null;
+    if(col){var ref=await col.add(rec);rec.id=ref.id}
+    else{rec.id="o"+Date.now()+Math.random().toString(36).slice(2,6);items.push(rec);mirror();renderHist()}
+    return rec;
+  }
+  async function delTx(id){
+    var rec=items.filter(function(i){return i.id===id})[0];
+    if(col){await col.doc(id).delete()}
+    else{items=items.filter(function(i){return i.id!==id});mirror();renderHist()}
+    if(rec)toast("Entry deleted","Undo",function(){saveTx(rec)});
+  }
+
+  function buildPrompt(text){
+    var lines=items.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date))}).slice(0,80).map(function(i){return i.id+" | "+i.date+" | "+(i.type||"exp")+" | "+norm(i.category,i.type==="inc"?"inc":i.type==="sav"?"sav":"exp")+" | "+i.amount+" | "+i.note}).join("\n")||"(no entries yet)";
+    var hist=turns.slice(-6).map(function(t){return (t.r==="u"?"User: ":"Bot: ")+t.c}).join("\n");
+    return "You are a friendly, concise income, expense and savings logging bot. The user’s name is "+NAME+" (Tattep). Always write the \"reply\" field in natural, friendly Thai (polite, ending with ครับ), and address the user as คุณทัตเทพ only occasionally. Today is "+today()+". Currency is Thai baht.\n"+
+    "Entry types: exp (spending), inc (income), sav (money set aside, saved or invested).\n"+
+    "Expense categories by group. Needs: Food, Transport, Housing, Utilities, Health, Education. Wants: Drinks, Shopping, Entertainment. Miscellaneous: Miscellaneous (small odd costs, จิปาถะ, anything that fits nowhere else). Savings categories (type sav): Emergency fund, Investments, Savings goal. Income categories: Salary, Side income, Bonus, Gift, Other income.\n"+
+    "Keep category names exactly in English as listed. Savings or investing (ฝากออม, ซื้อกองทุน, เก็บเงิน) is type sav, never exp. (Older entries may use Thai category names; treat them as the same categories.)\n\n"+
+    "Saved entries (id | date | type | category | amount | note):\n"+lines+"\n\n"+
+    "Monthly budgets set (category: baht): "+JSON.stringify(budgets)+"\n\nRecent conversation:\n"+hist+"\n\nNew user message: "+text+"\n\n"+
+    "Answer with JSON only, no other text, no markdown, in this shape:\n"+
+    '{"reply":"short reply in Thai","add":[{"type":"exp or inc or sav","amount":number,"category":"English name from the lists above","note":"short description (Thai is fine)","date":"YYYY-MM-DD"}],"delete":["ids to delete"],"budget":{"category":amount}}\n'+
+    "Rules: split multiple money items in one message into separate entries; if no date is given use today, and convert words like เมื่อวาน (yesterday) into real dates; "+
+    "if the user asks for a summary or any other question, answer it in reply from the saved entries and set add to []; "+
+    "if the user asks to delete or undo an entry, put the matching id in delete; if the amount is unclear, ask in reply and do not save; never guess amounts; "+
+    "if the user sets or changes a category budget (for example งบอาหาร 5000), put it in budget using the English category name (use 0 to remove that budget), otherwise budget is {}; "+
+    "when saving an expense in a category that has a budget, say briefly how much budget is left this month (including the new entry) and warn if over 80% used; when saving savings, encourage briefly.";
+  }
+  function parseJson(t){
+    t=String(t).replace(/```json|```/g,"").trim();
+    var a=t.indexOf("{"),b=t.lastIndexOf("}");
+    if(a<0||b<0)throw new Error("no json");
+    return JSON.parse(t.slice(a,b+1));
+  }
+
+  async function send(text){
+    if(busy||!text.trim())return;
+    busy=true;$("send").disabled=true;$("hint").style.display="none";
+    addMsg("me",esc(text));
+    var wait=addMsg("bot","กำลังคิด...");
+    try{
+      if(!sample)throw {code:"none"};
+      var out=await sample(buildPrompt(text),{cache:false,modelTier:"quick"});
+      var j=parseJson(out.text),saved=[];
+      for(var k=0;k<(j.add||[]).length;k++){var r=await saveTx(j.add[k]);if(r)saved.push(r)}
+      for(var d=0;d<(j.delete||[]).length;d++){await delTx(String(j.delete[d]))}
+      if(j.budget&&typeof j.budget==="object"&&Object.keys(j.budget).length){var nb=Object.assign({},budgets);Object.keys(j.budget).forEach(function(k){var v=Number(j.budget[k]);if(v>0)nb[norm(k,"exp")]=v;else delete nb[norm(k,"exp")]});budgets=nb;if(col){await col.doc("budget").set({map:nb})}else mirror();renderHist()}
+      var html=esc(j.reply||(saved.length?"บันทึกแล้วครับ":"รับทราบครับ"));
+      if(saved.length)html+='<div class="chips">'+saved.map(function(r){return '<div class="chip"><span>'+esc(r.category)+' <i>'+esc(r.note)+'</i></span><span class="amt t-'+r.type+'">'+sign(r.type)+fmt(r.amount)+'</span></div>'}).join("")+'</div>';
+      wait.innerHTML=html;
+      if(saved.length)burst(wait,saved.some(function(r){return r.type==="sav"})?18:9);
+      turns.push({r:"u",c:text},{r:"b",c:j.reply||""});
+    }catch(e){
+      var m="ขอโทษครับ ตอนนี้ตอบไม่ได้ ลองพิมพ์ใหม่อีกครั้งนะครับ";
+      if(e&&e.code==="not_granted")m="ต้องอนุญาตให้หน้านี้ใช้ Claude ก่อน ผมถึงจะบันทึกจากข้อความได้ครับ";
+      else if(e&&e.code==="rate_limited")m="ส่งถี่เกินไปครับ รอสักครู่แล้วลองใหม่";
+      else if(e&&e.code==="none")m="หน้านี้ยังเชื่อมต่อกับ Claude ไม่ได้ครับ ลองเปิดจากลิงก์ใน claude.ai";
+      wait.textContent=m;
+    }
+    busy=false;$("send").disabled=false;$("q").focus();
+    $("chat").scrollTop=$("chat").scrollHeight;
+  }
+
+  var cbusy=false;
+  async function runCalc(text){
+    if(cbusy||!text.trim())return;
+    cbusy=true;$("cgo").disabled=true;var o=$("cout");o.textContent="Thinking...";
+    try{
+      if(!sample)throw {code:"none"};
+      var m=viewMonth,s=sum(m),by={};
+      items.forEach(function(i){if(String(i.date).slice(0,7)===m&&i.type!=="inc")by[norm(i.category,i.type==="sav"?"sav":"exp")]=(by[norm(i.category,i.type==="sav"?"sav":"exp")]||0)+i.amount});
+      var pr="You are a careful calculator and money helper for "+NAME+" (Tattep). Currency is Thai baht. Reply in the user’s language. Today is "+today()+".\n"+
+        "The user’s data for "+m+": income "+s.inc+", expenses "+s.exp+", saved "+s.sav+", cash left "+(s.inc-s.exp-s.sav)+". Spending and savings by category: "+JSON.stringify(by)+". Monthly budgets: "+JSON.stringify(budgets)+".\n"+
+        "Use this data only if the request needs it. Solve the request (savings goals, interest, loans, bill splitting, percentages, budget what-ifs). Show the key steps briefly, check the arithmetic twice, and finish with one last line starting with “Answer:”. Plain text only, no markdown.\n\nRequest: "+text;
+      var out=await sample(pr,{cache:false,modelTier:"default",onText:function(x){o.textContent=x.text}});
+      o.textContent=out.text;
+    }catch(e){
+      var msg="Sorry, I couldn’t calculate that. Please try again.";
+      if(e&&e.code==="not_granted")msg="Please allow this page to use Claude first.";
+      else if(e&&e.code==="rate_limited")msg="Too many requests. Wait a moment and try again.";
+      else if(e&&e.code==="none")msg="This page can’t reach Claude yet. Try opening it from the link inside claude.ai.";
+      o.textContent=(e&&e.text&&e.code!=="not_granted"?e.text+"\n\n":"")+msg;
+    }
+    cbusy=false;$("cgo").disabled=false;
+  }
+
+  /* ---------- Export ---------- */
+  async function exportFile(kind){
+    var dl=null;try{dl=await claude.use("downloads")}catch(e){}
+    if(!dl){toast("Downloads aren’t available in this view.");return}
+    var TL={inc:"Income",exp:"Expense",sav:"Savings"};
+    var rows=items.slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date))}).map(function(i){
+      var ty=i.type||"exp",c=norm(i.category,ty==="inc"?"inc":ty==="sav"?"sav":"exp");
+      return {Date:i.date,Type:TL[ty]||"Expense",Group:ty==="inc"?"Income":GNAME[gOf(i)],Category:c,Note:i.note||"",Amount:i.amount};
+    });
+    if(!rows.length){toast("Nothing to export yet.");return}
+    try{
+      if(kind==="xlsx"&&window.XLSX){
+        var months={};items.forEach(function(i){months[String(i.date).slice(0,7)]=1});
+        var ms=Object.keys(months).sort().map(function(m){var s=sum(m);return {Month:m,Income:s.inc,Expenses:s.exp,Savings:s.sav,"Cash left":s.inc-s.exp-s.sav}});
+        var wb=XLSX.utils.book_new(),w1=XLSX.utils.json_to_sheet(rows),w2=XLSX.utils.json_to_sheet(ms);
+        w1["!cols"]=[{wch:12},{wch:10},{wch:14},{wch:18},{wch:28},{wch:12}];w2["!cols"]=[{wch:10},{wch:12},{wch:12},{wch:12},{wch:12}];
+        XLSX.utils.book_append_sheet(wb,w1,"Transactions");XLSX.utils.book_append_sheet(wb,w2,"Monthly summary");
+        await dl.save({filename:"tattep-money-"+today()+".xlsx",data:XLSX.write(wb,{bookType:"xlsx",type:"array"})});
+      }else{
+        var hd=Object.keys(rows[0]),q=function(v){return '"'+String(v).replace(/"/g,'""')+'"'};
+        var csv=hd.join(",")+"\n"+rows.map(function(r){return hd.map(function(h){return q(r[h])}).join(",")}).join("\n");
+        await dl.save({filename:"tattep-money-"+today()+".csv",data:"\uFEFF"+csv});
+      }
+      toast("Export ready");
+    }catch(e){if(!e||e.code!=="declined")toast("Couldn’t export. Try CSV instead.")}
+  }
+
+  /* ---------- Wiring ---------- */
+  $("f").onsubmit=function(e){e.preventDefault();var v=$("q").value;$("q").value="";send(v)};
+  $("hint").onclick=function(e){var b=e.target.closest("button");if(b)send(b.textContent)};
+  $("hlist").onclick=function(e){var b=e.target.closest(".del");if(!b)return;var row=b.closest(".row");row.classList.add("gone");setTimeout(function(){delTx(b.getAttribute("data-id"))},reduce?0:220)};
+  var PANES={c:"chat",o:"ov",i:"inv",k:"calc",h:"hist"},TABS={c:"tChat",o:"tOv",i:"tInv",k:"tCalc",h:"tHist"};
+  function show(n){
+    Object.keys(PANES).forEach(function(k){var p=$(PANES[k]);p.style.display=k===n?"block":"none";$(TABS[k]).setAttribute("aria-pressed",k===n);if(k===n){p.classList.remove("in");void p.offsetWidth;p.classList.add("in")}});
+    $("f").style.display=n==="c"?"flex":"none";$("hint").style.display=n==="c"&&!turns.length?"flex":"none";
+    if(n==="i")playInv();if(n==="o")renderOv();
+  }
+  Object.keys(TABS).forEach(function(k){$(TABS[k]).onclick=function(){show(k)}});
+  $("cgo").onclick=function(){runCalc($("cq").value)};
+  $("chint").onclick=function(e){var b=e.target.closest("button");if(b){$("cq").value=b.textContent;runCalc(b.textContent)}};
+  ["rP","rR","rY"].forEach(function(id){$(id).oninput=function(){cancelAnimationFrame(raf);labels();drawInv(1)}});
+  $("play").onclick=playInv;
+  $("snap").onclick=function(e){var b=e.target.closest("[data-sug]");if(b){$("rP").value=b.getAttribute("data-sug");labels();playInv();burst(b,10)}};
+  $("xX").onclick=function(){exportFile("xlsx")};$("xC").onclick=function(){exportFile("csv")};
+  $("mon").value=viewMonth;
+  $("mon").onchange=function(){viewMonth=this.value||viewMonth;renderHist();renderOv()};
+
+  $("dt").textContent=new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+  labels();drawInv(1);
+  addMsg("bot","สวัสดีครับคุณทัตเทพ พิมพ์รายรับ รายจ่าย หรือเงินออมมาได้เลย เช่น “ข้าวเที่ยง 60 กาแฟ 55” หรือ “ออมเงินฉุกเฉิน 2000” เดี๋ยวผมจัดหมวดหมู่และบันทึกให้\nถามสรุปได้ด้วย เช่น “เดือนนี้ใช้ไปเท่าไหร่”");
+  renderHist();
+
+  (async function init(){
+    try{sample=await claude.use("sample")}catch(e){sample=null}
+    try{
+      db=await claude.use("db");var user=await claude.use("user");
+      var id=user&&await user.id();
+      if(db&&id){
+        col=db.collection("data/users/"+id);
+        col.onSnapshot(function(snap){
+          var first=!gotSnap;gotSnap=true;items=[];
+          snap.docs.forEach(function(d){var x=d.data()||{};if(d.id==="budget"){budgets=x.map||{}}else{x.id=d.id;items.push(x)}});
+          renderHist();
+          if(first&&!items.length){
+            var b=readMirror();
+            if(b&&b.items&&b.items.length){toast("Found a backup of "+b.items.length+" entries on this device","Restore",async function(){
+              for(var k=0;k<b.items.length;k++){var t=Object.assign({},b.items[k]);delete t.id;await saveTx(t)}
+              if(b.budgets&&Object.keys(b.budgets).length){budgets=b.budgets;await col.doc("budget").set({map:budgets})}
+            })}
+          }else mirror();
+        },function(){col=null});
+      }else{
+        var b2=readMirror();if(b2&&b2.items){items=b2.items;budgets=b2.budgets||{};renderHist()}
+        addMsg("bot","หมายเหตุ: เชื่อมต่อฐานข้อมูลไม่ได้ ตอนนี้ข้อมูลจะเก็บสำรองไว้ในเบราว์เซอร์เครื่องนี้เท่านั้นครับ")
+      }
+    }catch(e){col=null}
+  })();
+})();
+</script>
+</body>
+</html>
